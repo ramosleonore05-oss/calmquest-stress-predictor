@@ -21,10 +21,7 @@ import {
 } from "lucide-react";
 
 const API_URL =
-  import.meta.env.VITE_API_URL ||
-  (["localhost", "127.0.0.1"].includes(window.location.hostname) && window.location.port !== "8000"
-    ? `${window.location.protocol}//${window.location.hostname}:8000`
-    : window.location.origin);
+  import.meta.env.VITE_API_URL || "https://calmquest-stress-predictor-production.up.railway.app";
 const HISTORY_KEY = "stress-predictor-history";
 
 const initialForm = {
