@@ -25,8 +25,9 @@ app = FastAPI(
 
 # During development, allow Vite frontend access. Set FRONTEND_ORIGIN in hosted
 # environments when the frontend is deployed separately from this API.
-frontend_origin = os.getenv("FRONTEND_ORIGIN")
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "").rstrip("/")
 allowed_origins = [
+    "https://calmquest-stress-predictor.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
