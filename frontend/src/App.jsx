@@ -250,6 +250,12 @@ export default function App() {
     setView("review");
   }
 
+  function goToReview() {
+    if (isComplete) {
+      setView("review");
+    }
+  }
+
   if (!hasStarted) {
     return (
       <main className="landing-page">
@@ -303,7 +309,9 @@ export default function App() {
           <button
             type="button"
             className={view === "review" ? "tab-button active" : "tab-button"}
-            onClick={() => setView("review")}
+            onClick={goToReview}
+            disabled={!isComplete}
+            title={isComplete ? "Review answers" : "Answer all questions first"}
           >
             <BarChart3 size={18} />
             Review
@@ -406,7 +414,7 @@ export default function App() {
                   <ArrowRight size={18} />
                 </button>
               ) : (
-                <button type="button" className="primary-action" disabled={!isComplete} onClick={() => setView("review")}>
+                <button type="button" className="primary-action" disabled={!isComplete} onClick={goToReview}>
                   Review Answers
                   <ArrowRight size={18} />
                 </button>
@@ -569,16 +577,52 @@ export default function App() {
 
             <div className="info-grid">
               <article className="info-card">
-                <strong>Check-In</strong>
-                <p>Answer one question at a time about sleep, headaches, school confidence, workload, and activities.</p>
+                <strong>Landing Page</strong>
+                <p>The opening screen introduces CalmQuest and starts the student stress check-in.</p>
               </article>
               <article className="info-card">
-                <strong>Review</strong>
-                <p>After the last question, review your answers before sending them to the prediction model.</p>
+                <strong>Check-In Tab</strong>
+                <p>Shows one question at a time so the form feels smaller on mobile phones.</p>
               </article>
               <article className="info-card">
-                <strong>Prediction</strong>
-                <p>The model returns a stress level, confidence score, probability bars, and practical action steps.</p>
+                <strong>Question Progress</strong>
+                <p>The progress percentage shows how many of the five questions have been answered.</p>
+              </article>
+              <article className="info-card">
+                <strong>Readiness Score</strong>
+                <p>A quick wellness-style score based on the current answers. Higher means the answers look more balanced.</p>
+              </article>
+              <article className="info-card">
+                <strong>Live Profile</strong>
+                <p>The profile chip changes from Not started to Stable, Mixed, or Strained as answers are selected.</p>
+              </article>
+              <article className="info-card">
+                <strong>Pressure Points</strong>
+                <p>The small chips highlight answered areas that currently look least balanced.</p>
+              </article>
+              <article className="info-card">
+                <strong>Review Tab</strong>
+                <p>Unlocks only after all questions are answered. It lets you check every answer before predicting.</p>
+              </article>
+              <article className="info-card">
+                <strong>Predict Stress Button</strong>
+                <p>Sends the completed answers to the backend model and returns the stress prediction.</p>
+              </article>
+              <article className="info-card">
+                <strong>Stress Profile</strong>
+                <p>Shows the predicted stress level, confidence percentage, recommendation, and probability bars.</p>
+              </article>
+              <article className="info-card">
+                <strong>Action Plan</strong>
+                <p>Lists practical next steps based on the predicted stress level and selected answers.</p>
+              </article>
+              <article className="info-card">
+                <strong>History Tab</strong>
+                <p>Saves recent predictions in this browser so a previous result can be opened again.</p>
+              </article>
+              <article className="info-card">
+                <strong>Reset Button</strong>
+                <p>Clears the current answers and prediction so a new check-in can start from the first question.</p>
               </article>
               <article className="info-card caution">
                 <strong>Important Note</strong>

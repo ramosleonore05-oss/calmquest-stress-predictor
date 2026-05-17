@@ -224,6 +224,11 @@ h1 {
   color: #07110d;
 }
 
+.tab-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .insight-strip {
   gap: 8px;
   flex-wrap: wrap;
