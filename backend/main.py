@@ -1,29 +1,20 @@
 from pathlib import Path
 import json
-<<<<<<< HEAD
 import os
-=======
->>>>>>> 65a61467272ef9ae535890d2039e3c1f6dba6ea3
 from typing import Dict, List
 
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-<<<<<<< HEAD
 from fastapi.staticfiles import StaticFiles
-=======
->>>>>>> 65a61467272ef9ae535890d2039e3c1f6dba6ea3
 from pydantic import BaseModel, Field
 
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR.parent / "ml" / "stress_model.joblib"
 METRICS_PATH = BASE_DIR.parent / "ml" / "metrics.json"
-<<<<<<< HEAD
 FRONTEND_DIST = BASE_DIR.parent / "frontend" / "dist"
-=======
->>>>>>> 65a61467272ef9ae535890d2039e3c1f6dba6ea3
 
 
 app = FastAPI(
@@ -32,7 +23,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-<<<<<<< HEAD
 # During development, allow Vite frontend access. Set FRONTEND_ORIGIN in hosted
 # environments when the frontend is deployed separately from this API.
 frontend_origin = os.getenv("FRONTEND_ORIGIN")
@@ -46,15 +36,6 @@ if frontend_origin:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-=======
-# During development, allow Vite frontend access.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
->>>>>>> 65a61467272ef9ae535890d2039e3c1f6dba6ea3
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+):5173",
     allow_credentials=True,
     allow_methods=["*"],
@@ -247,13 +228,8 @@ def build_probability_bands(df: pd.DataFrame) -> List[ProbabilityBand]:
     ]
 
 
-<<<<<<< HEAD
 @app.get("/api")
 def api_root():
-=======
-@app.get("/")
-def root():
->>>>>>> 65a61467272ef9ae535890d2039e3c1f6dba6ea3
     return {
         "message": "Student Stress Level Predictor API is running.",
         "docs": "/docs",
@@ -304,10 +280,7 @@ def predict_stress(data: StressInput):
 
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
-<<<<<<< HEAD
 
 
 if FRONTEND_DIST.exists():
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
-=======
->>>>>>> 65a61467272ef9ae535890d2039e3c1f6dba6ea3

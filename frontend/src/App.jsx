@@ -20,15 +20,11 @@ import {
   X,
 } from "lucide-react";
 
-<<<<<<< HEAD
 const API_URL =
   import.meta.env.VITE_API_URL ||
   (["localhost", "127.0.0.1"].includes(window.location.hostname) && window.location.port !== "8000"
     ? `${window.location.protocol}//${window.location.hostname}:8000`
     : window.location.origin);
-=======
-const API_URL = `${window.location.protocol}//${window.location.hostname}:8000`;
->>>>>>> 65a61467272ef9ae535890d2039e3c1f6dba6ea3
 const HISTORY_KEY = "stress-predictor-history";
 
 const initialForm = {
