@@ -48,6 +48,64 @@ p {
   padding: 18px;
 }
 
+.landing-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(140deg, rgba(77, 214, 194, 0.18), transparent 36%),
+    linear-gradient(320deg, rgba(98, 168, 255, 0.2), transparent 40%),
+    #ffffff;
+}
+
+.landing-hero {
+  width: min(760px, 100%);
+  min-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  text-align: center;
+}
+
+.landing-logo {
+  width: min(460px, 88vw);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 22px 38px rgba(36, 96, 138, 0.18));
+}
+
+.landing-copy {
+  max-width: 560px;
+  color: #17313f;
+}
+
+.landing-copy h1 {
+  color: #10242e;
+  font-size: clamp(3rem, 12vw, 6rem);
+}
+
+.landing-copy p {
+  margin-top: 10px;
+  color: #48606d;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.start-button {
+  min-width: 180px;
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1557a8, #14b8a6);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: 0 18px 34px rgba(20, 111, 168, 0.26);
+}
+
 .app-shell {
   width: min(1180px, 100%);
   margin: 0 auto;
@@ -247,6 +305,8 @@ h1 {
 }
 
 .question-block {
+  max-width: 860px;
+  margin: 0 auto;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -600,6 +660,38 @@ h1 {
   font-size: 1rem;
 }
 
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.info-card {
+  min-height: 150px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #14191e;
+}
+
+.info-card strong {
+  display: block;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.info-card p {
+  margin-top: 8px;
+  color: var(--soft);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.info-card.caution {
+  border-color: rgba(244, 189, 95, 0.62);
+  background: rgba(244, 189, 95, 0.08);
+}
+
 @media (max-width: 900px) {
   .topbar {
     align-items: stretch;
@@ -642,12 +734,15 @@ h1 {
 
   .tabs {
     gap: 4px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .tab-button {
     min-height: 42px;
     padding: 0 6px;
-    font-size: 0.78rem;
+    font-size: 0.7rem;
+    gap: 4px;
   }
 
   .tab-button svg {

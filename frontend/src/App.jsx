@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ClipboardList,
   History,
+  Info,
   Moon,
   RotateCcw,
   Send,
@@ -140,7 +141,9 @@ function getSelectedOption(question, value) {
 }
 
 export default function App() {
-  const [view, setView] = useState("questions");
+  const [hasStarted, setHasStarted] = useState(false);
+  const [view, setView] = useState("checkin");
+  const [step, setStep] = useState(0);
   const [form, setForm] = useState(initialForm);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState(readHistory);
@@ -150,6 +153,9 @@ export default function App() {
   const answeredCount = questions.filter((question) => form[question.key] !== null).length;
   const isComplete = answeredCount === questions.length;
   const progress = Math.round((answeredCount / questions.length) * 100);
+  const currentQuestion = questions[step];
+  const currentAnswer = form[currentQuestion.key];
+  const isCurrentAnswered = currentAnswer !== null;
 
   const readinessScore = useMemo(() => {
     const answeredQuestions = questions.filter((question) => form[question.key] !== null);
@@ -228,7 +234,8 @@ export default function App() {
     setForm(initialForm);
     setResult(null);
     setApiError("");
-    setView("questions");
+    setStep(0);
+    setView("checkin");
   }
 
   function clearHistory() {
@@ -241,6 +248,23 @@ export default function App() {
     setResult(item.result);
     setApiError("");
     setView("review");
+  }
+
+  if (!hasStarted) {
+    return (
+      <main className="landing-page">
+        <section className="landing-hero">
+          <img className="landing-logo" src="/CalmQuest-logo-removebg-preview.png" alt="CalmQuest" />
+          <div className="landing-copy">
+            <h1>CalmQuest</h1>
+            <p>A quick student check-in that turns everyday school pressure into a clear stress profile.</p>
+          </div>
+          <button type="button" className="start-button" onClick={() => setHasStarted(true)}>
+            Start Check-In
+          </button>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -270,11 +294,11 @@ export default function App() {
         <nav className="tabs" aria-label="App sections">
           <button
             type="button"
-            className={view === "questions" ? "tab-button active" : "tab-button"}
-            onClick={() => setView("questions")}
+            className={view === "checkin" ? "tab-button active" : "tab-button"}
+            onClick={() => setView("checkin")}
           >
             <ClipboardList size={18} />
-            Questions
+            Check-In
           </button>
           <button
             type="button"
@@ -291,6 +315,14 @@ export default function App() {
           >
             <History size={18} />
             History
+          </button>
+          <button
+            type="button"
+            className={view === "info" ? "tab-button active" : "tab-button"}
+            onClick={() => setView("info")}
+          >
+            <Info size={18} />
+            Info
           </button>
         </nav>
 
@@ -309,12 +341,12 @@ export default function App() {
           ))}
         </section>
 
-        {view === "questions" && (
+        {view === "checkin" && (
           <form className="panel questions-page" onSubmit={(event) => event.preventDefault()}>
             <div className="panel-heading">
               <div>
-                <p>First Page</p>
-                <h2>Answer The Questions</h2>
+                <p>Question {step + 1} of {questions.length}</p>
+                <h2>{currentQuestion.label}</h2>
               </div>
               <button type="button" className="icon-button" onClick={resetForm} title="Reset check-in">
                 <RotateCcw size={18} />
@@ -325,42 +357,60 @@ export default function App() {
               <span style={{ width: `${progress}%` }} />
             </div>
 
-            <div className="questions-list">
-              {questions.map((question) => (
-                <article className="question-block" key={question.key}>
-                  <div className="question-card">
-                    <div className="question-icon">
-                      <question.icon size={22} />
-                    </div>
-                    <div>
-                      <strong>{question.label}</strong>
-                      <h3>{question.question}</h3>
-                      <p>{question.helper}</p>
-                    </div>
-                  </div>
+            <article className="question-block">
+              <div className="question-card">
+                <div className="question-icon">
+                  <currentQuestion.icon size={22} />
+                </div>
+                <div>
+                  <strong>{currentQuestion.label}</strong>
+                  <h3>{currentQuestion.question}</h3>
+                  <p>{currentQuestion.helper}</p>
+                </div>
+              </div>
 
-                  <div className="answer-grid">
-                    {question.options.map((option) => (
-                      <button
-                        type="button"
-                        className={form[question.key] === option.value ? "answer-option selected" : "answer-option"}
-                        key={`${question.key}-${option.value}`}
-                        onClick={() => updateField(question.key, option.value)}
-                      >
-                        <strong>{option.title}</strong>
-                        <span>{option.detail}</span>
-                      </button>
-                    ))}
-                  </div>
-                </article>
-              ))}
-            </div>
+              <div className="answer-grid">
+                {currentQuestion.options.map((option) => (
+                  <button
+                    type="button"
+                    className={currentAnswer === option.value ? "answer-option selected" : "answer-option"}
+                    key={`${currentQuestion.key}-${option.value}`}
+                    onClick={() => updateField(currentQuestion.key, option.value)}
+                  >
+                    <strong>{option.title}</strong>
+                    <span>{option.detail}</span>
+                  </button>
+                ))}
+              </div>
+            </article>
 
-            <div className="actions">
-              <button type="button" className="primary-action" disabled={!isComplete} onClick={() => setView("review")}>
-                Review Answers
-                <ArrowRight size={18} />
+            <div className="actions split-actions">
+              <button
+                type="button"
+                className="secondary-action"
+                disabled={step === 0}
+                onClick={() => setStep((value) => Math.max(0, value - 1))}
+              >
+                <ArrowLeft size={18} />
+                Back
               </button>
+
+              {step < questions.length - 1 ? (
+                <button
+                  type="button"
+                  className="primary-action"
+                  disabled={!isCurrentAnswered}
+                  onClick={() => setStep((value) => Math.min(questions.length - 1, value + 1))}
+                >
+                  Next
+                  <ArrowRight size={18} />
+                </button>
+              ) : (
+                <button type="button" className="primary-action" disabled={!isComplete} onClick={() => setView("review")}>
+                  Review Answers
+                  <ArrowRight size={18} />
+                </button>
+              )}
             </div>
           </form>
         )}
@@ -373,7 +423,7 @@ export default function App() {
                   <p>Second Page</p>
                   <h2>Answer Review</h2>
                 </div>
-                <button type="button" className="secondary-action compact-button" onClick={() => setView("questions")}>
+                <button type="button" className="secondary-action compact-button" onClick={() => setView("checkin")}>
                   <ArrowLeft size={18} />
                   Edit
                 </button>
@@ -504,6 +554,37 @@ export default function App() {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {view === "info" && (
+          <section className="panel info-panel">
+            <div className="panel-heading">
+              <div>
+                <p>Guide</p>
+                <h2>Information</h2>
+              </div>
+              <Info size={28} />
+            </div>
+
+            <div className="info-grid">
+              <article className="info-card">
+                <strong>Check-In</strong>
+                <p>Answer one question at a time about sleep, headaches, school confidence, workload, and activities.</p>
+              </article>
+              <article className="info-card">
+                <strong>Review</strong>
+                <p>After the last question, review your answers before sending them to the prediction model.</p>
+              </article>
+              <article className="info-card">
+                <strong>Prediction</strong>
+                <p>The model returns a stress level, confidence score, probability bars, and practical action steps.</p>
+              </article>
+              <article className="info-card caution">
+                <strong>Important Note</strong>
+                <p>This is an awareness tool, not a medical diagnosis. If stress feels severe or unsafe, talk to a trusted adult, counselor, adviser, or health professional.</p>
+              </article>
+            </div>
           </section>
         )}
       </section>
