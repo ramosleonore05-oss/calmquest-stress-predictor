@@ -15,7 +15,9 @@ import {
   RotateCcw,
   Send,
   Sparkles,
+  Timer,
   Trophy,
+  Users,
   WifiOff,
   X,
 } from "lucide-react";
@@ -24,86 +26,157 @@ const API_URL =
   import.meta.env.VITE_API_URL || "https://calmquest-stress-predictor-production.up.railway.app";
 const HISTORY_KEY = "stress-predictor-history";
 
-const initialForm = {
-  sleep_quality: null,
-  headaches_per_week: null,
-  academic_performance: null,
-  study_load: null,
-  extracurricular_per_week: null,
-};
-
 const questions = [
   {
     key: "sleep_quality",
+    featureKey: "sleep_quality",
     label: "Sleep Recovery",
     question: "How refreshed do you usually feel when you wake up for school?",
     helper: "Think about the last few school days, not just one night.",
+    placeholder: "Example: I usually sleep around 6 hours and still wake up tired before class.",
+    volumeLabel: "Recovery volume",
+    volumeLow: "Drained",
+    volumeHigh: "Restored",
+    direction: "protective",
     icon: Moon,
-    options: [
-      { value: 1, title: "Exhausted", detail: "I wake up tired most days." },
-      { value: 2, title: "Not great", detail: "I get through the morning slowly." },
-      { value: 3, title: "Okay", detail: "Some days are fine, some are rough." },
-      { value: 4, title: "Rested", detail: "I usually have enough energy." },
-      { value: 5, title: "Fully charged", detail: "Sleep feels consistent and restorative." },
-    ],
   },
   {
     key: "headaches_per_week",
+    featureKey: "headaches_per_week",
     label: "Body Signals",
     question: "How often do headaches or tension show up during a normal week?",
     helper: "Physical signals can reveal pressure before it feels obvious.",
+    placeholder: "Example: I get headaches two or three times a week, usually after long study days.",
+    volumeLabel: "Body pressure",
+    volumeLow: "Quiet",
+    volumeHigh: "Loud",
+    direction: "pressure",
     icon: AlertCircle,
-    options: [
-      { value: 0, title: "Almost never", detail: "No regular headaches." },
-      { value: 1, title: "Once", detail: "It happens, but it is rare." },
-      { value: 2, title: "A few times", detail: "I notice it more than once." },
-      { value: 3, title: "Often", detail: "Several school days are affected." },
-      { value: 5, title: "Very often", detail: "It is a recurring weekly problem." },
-    ],
   },
   {
     key: "academic_performance",
+    featureKey: "academic_performance",
     label: "Academic Confidence",
     question: "How confident do you feel about your current class performance?",
     helper: "This is about how school feels right now, not your long-term ability.",
+    placeholder: "Example: I understand some topics, but I am behind in math and worried about exams.",
+    volumeLabel: "Confidence volume",
+    volumeLow: "Unsure",
+    volumeHigh: "Prepared",
+    direction: "protective",
     icon: BookOpen,
-    options: [
-      { value: 1, title: "Falling behind", detail: "I feel lost in several subjects." },
-      { value: 2, title: "Uneasy", detail: "I am keeping up with difficulty." },
-      { value: 3, title: "Steady enough", detail: "My performance feels average." },
-      { value: 4, title: "Confident", detail: "I understand most of my work." },
-      { value: 5, title: "Strong", detail: "I feel prepared and on track." },
-    ],
   },
   {
     key: "study_load",
+    featureKey: "study_load",
     label: "Workload Pressure",
     question: "How heavy does your homework, studying, and exam prep feel?",
     helper: "Include assignments, deadlines, tutoring, and revision time.",
+    placeholder: "Example: My homework and exam prep feel constant, and I rarely finish before bedtime.",
+    volumeLabel: "Workload volume",
+    volumeLow: "Light",
+    volumeHigh: "Maxed",
+    direction: "pressure",
     icon: Brain,
-    options: [
-      { value: 1, title: "Light", detail: "I have plenty of breathing room." },
-      { value: 2, title: "Manageable", detail: "Busy, but still under control." },
-      { value: 3, title: "Moderate", detail: "I need a plan to keep pace." },
-      { value: 4, title: "Heavy", detail: "It is hard to switch off." },
-      { value: 5, title: "Overwhelming", detail: "The work feels constant." },
-    ],
   },
   {
     key: "extracurricular_per_week",
+    featureKey: "extracurricular_per_week",
     label: "Schedule Balance",
     question: "How packed is your week with clubs, sports, jobs, or other activities?",
     helper: "The healthiest range is usually enough activity without losing recovery time.",
+    placeholder: "Example: I have basketball three days a week and a club meeting, so my evenings are busy.",
+    volumeLabel: "Schedule volume",
+    volumeLow: "Empty",
+    volumeHigh: "Packed",
+    direction: "pressure",
     icon: Trophy,
-    options: [
-      { value: 0, title: "None", detail: "School takes almost all my energy." },
-      { value: 1, title: "One activity", detail: "A small amount outside class." },
-      { value: 2, title: "Balanced", detail: "A few things that fit well." },
-      { value: 4, title: "Busy", detail: "My calendar is crowded." },
-      { value: 5, title: "Packed", detail: "Activities compete with sleep or study." },
-    ],
+  },
+  {
+    key: "emotional_pressure",
+    featureKey: "study_load",
+    label: "Emotional Pressure",
+    question: "What feelings show up most often when you think about school lately?",
+    helper: "Mention worry, pressure, motivation, calm, or anything else that feels relevant.",
+    placeholder: "Example: I feel worried before tests and tense when I see unfinished tasks.",
+    volumeLabel: "Emotion volume",
+    volumeLow: "Calm",
+    volumeHigh: "Intense",
+    direction: "pressure",
+    icon: Sparkles,
+  },
+  {
+    key: "focus_energy",
+    featureKey: "academic_performance",
+    label: "Focus Energy",
+    question: "How easy or hard is it to focus during class and while studying?",
+    helper: "Describe attention, motivation, distractions, and mental energy.",
+    placeholder: "Example: I can focus for short periods, then I get distracted and reread the same notes.",
+    volumeLabel: "Focus volume",
+    volumeLow: "Scattered",
+    volumeHigh: "Locked in",
+    direction: "protective",
+    icon: Brain,
+  },
+  {
+    key: "deadline_pressure",
+    featureKey: "study_load",
+    label: "Deadline Pressure",
+    question: "How do deadlines, exams, or unfinished tasks affect your week?",
+    helper: "Think about whether tasks feel planned, rushed, or constantly piling up.",
+    placeholder: "Example: Deadlines pile up near the end of the week, and I rush most assignments.",
+    volumeLabel: "Deadline volume",
+    volumeLow: "Clear",
+    volumeHigh: "Piling up",
+    direction: "pressure",
+    icon: Timer,
+  },
+  {
+    key: "support_system",
+    featureKey: "academic_performance",
+    label: "Support System",
+    question: "Who can you talk to when school feels stressful, and how helpful is that support?",
+    helper: "Include friends, family, teachers, classmates, counselors, or feeling alone.",
+    placeholder: "Example: I can talk to one friend, but I do not usually ask teachers for help.",
+    volumeLabel: "Support volume",
+    volumeLow: "Alone",
+    volumeHigh: "Supported",
+    direction: "protective",
+    icon: Users,
+  },
+  {
+    key: "recovery_breaks",
+    featureKey: "sleep_quality",
+    label: "Recovery Breaks",
+    question: "How much real downtime do you get after schoolwork and responsibilities?",
+    helper: "Describe breaks, hobbies, quiet time, screen time, or whether rest gets skipped.",
+    placeholder: "Example: I take short phone breaks, but I do not feel fully rested after them.",
+    volumeLabel: "Recharge volume",
+    volumeLow: "Empty",
+    volumeHigh: "Recharged",
+    direction: "protective",
+    icon: Moon,
   },
 ];
+
+const modelFeatureKeys = [
+  "sleep_quality",
+  "headaches_per_week",
+  "academic_performance",
+  "study_load",
+  "extracurricular_per_week",
+];
+
+const initialForm = Object.fromEntries(questions.map((question) => [question.key, ""]));
+const initialVolumes = Object.fromEntries(questions.map((question) => [question.key, 50]));
+
+const featureLabels = {
+  sleep_quality: ["Drained", "Tired", "Uneven", "Rested", "Restorative"],
+  headaches_per_week: ["Rare", "Occasional", "Repeated", "Frequent", "Very frequent", "Nearly daily"],
+  academic_performance: ["Falling behind", "Uneasy", "Steady", "Confident", "Strong"],
+  study_load: ["Light", "Manageable", "Moderate", "Heavy", "Overwhelming"],
+  extracurricular_per_week: ["None", "Light", "Balanced", "Active", "Busy", "Packed"],
+};
 
 function readHistory() {
   try {
@@ -120,12 +193,169 @@ function getResultClass(level) {
   return "high";
 }
 
+function normalizeAnswer(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function isAnswered(value) {
+  return normalizeAnswer(value).length >= 3;
+}
+
+function hasAny(text, words) {
+  return words.some((word) => text.includes(word));
+}
+
+function readFirstNumber(text) {
+  const wordNumbers = {
+    zero: 0,
+    none: 0,
+    no: 0,
+    one: 1,
+    once: 1,
+    two: 2,
+    twice: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+  };
+  const digitMatch = text.match(/\b\d+(\.\d+)?\b/);
+  if (digitMatch) return Number(digitMatch[0]);
+
+  const wordMatch = Object.keys(wordNumbers).find((word) => new RegExp(`\\b${word}\\b`).test(text));
+  return wordMatch ? wordNumbers[wordMatch] : null;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function inferFeatureValue(key, answer) {
+  const text = normalizeAnswer(answer);
+  const number = readFirstNumber(text);
+
+  if (key === "sleep_quality") {
+    if (number !== null && (text.includes("hour") || text.includes("hr"))) {
+      if (number >= 8) return 5;
+      if (number >= 7) return 4;
+      if (number >= 6) return 3;
+      if (number >= 5) return 2;
+      return 1;
+    }
+    if (hasAny(text, ["exhausted", "drained", "no sleep", "barely sleep", "insomnia", "always tired"])) return 1;
+    if (hasAny(text, ["tired", "sleepy", "not refreshed", "wake up tired", "restless"])) return 2;
+    if (hasAny(text, ["sometimes", "okay", "average", "depends", "mixed"])) return 3;
+    if (hasAny(text, ["rested", "enough sleep", "good sleep", "fine", "usually refreshed"])) return 4;
+    if (hasAny(text, ["great", "fully rested", "well rested", "energized", "refreshed every day"])) return 5;
+    return 3;
+  }
+
+  if (key === "headaches_per_week") {
+    if (hasAny(text, ["never", "almost never", "rarely", "none", "no headache"])) return 0;
+    if (hasAny(text, ["daily", "every day", "most days", "constant"])) return 5;
+    if (number !== null) return clamp(Math.round(number), 0, 5);
+    if (hasAny(text, ["very often", "frequent", "a lot", "many times"])) return 4;
+    if (hasAny(text, ["often", "several", "multiple"])) return 3;
+    if (hasAny(text, ["sometimes", "few", "couple"])) return 2;
+    if (hasAny(text, ["once", "occasionally"])) return 1;
+    return 2;
+  }
+
+  if (key === "academic_performance") {
+    if (hasAny(text, ["failing", "lost", "behind", "poor", "bad grades", "struggling a lot"])) return 1;
+    if (hasAny(text, ["worried", "uneasy", "struggling", "hard to keep up", "not confident"])) return 2;
+    if (hasAny(text, ["average", "okay", "steady", "middle", "passing", "mixed"])) return 3;
+    if (hasAny(text, ["confident", "good", "keeping up", "understand most", "on track"])) return 4;
+    if (hasAny(text, ["excellent", "strong", "top", "prepared", "high grades", "doing well"])) return 5;
+    return 3;
+  }
+
+  if (key === "study_load") {
+    if (hasAny(text, ["overwhelming", "too much", "constant", "never finish", "burned out", "no time"])) return 5;
+    if (hasAny(text, ["heavy", "hard to switch off", "a lot", "crowded", "pressure"])) return 4;
+    if (hasAny(text, ["moderate", "normal", "need a plan", "sometimes heavy", "manageable but busy"])) return 3;
+    if (hasAny(text, ["manageable", "under control", "fine", "not too much"])) return 2;
+    if (hasAny(text, ["light", "easy", "little homework", "plenty of time"])) return 1;
+    return 3;
+  }
+
+  if (key === "extracurricular_per_week") {
+    if (hasAny(text, ["none", "no club", "no activity", "nothing outside"])) return 0;
+    if (number !== null) return clamp(Math.round(number), 0, 5);
+    if (hasAny(text, ["packed", "every day", "too many", "no free time"])) return 5;
+    if (hasAny(text, ["busy", "crowded", "many activities"])) return 4;
+    if (hasAny(text, ["balanced", "few", "some", "club and sport"])) return 2;
+    if (hasAny(text, ["one", "once", "light"])) return 1;
+    return 2;
+  }
+
+  return 3;
+}
+
+function volumeToFeatureValue(question, volume) {
+  const value = Number(volume);
+
+  if (question.featureKey === "headaches_per_week" || question.featureKey === "extracurricular_per_week") {
+    return clamp(Math.round(value / 20), 0, 5);
+  }
+
+  if (question.direction === "protective") {
+    return clamp(Math.round(value / 25) + 1, 1, 5);
+  }
+
+  return clamp(Math.round(value / 25) + 1, 1, 5);
+}
+
+function blendFeatureValues(textValue, volumeValue) {
+  return textValue * 0.6 + volumeValue * 0.4;
+}
+
+function buildModelInput(formValues, volumeValues) {
+  const buckets = Object.fromEntries(modelFeatureKeys.map((key) => [key, []]));
+
+  questions.forEach((question) => {
+    if (!isAnswered(formValues[question.key])) return;
+
+    const textFeature = inferFeatureValue(question.featureKey, formValues[question.key]);
+    const volumeFeature = volumeToFeatureValue(question, volumeValues[question.key]);
+    buckets[question.featureKey].push(blendFeatureValues(textFeature, volumeFeature));
+  });
+
+  return Object.fromEntries(
+    modelFeatureKeys.map((key) => {
+      const values = buckets[key];
+      const fallback = key === "headaches_per_week" || key === "extracurricular_per_week" ? 0 : 3;
+      const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : fallback;
+      const min = key === "headaches_per_week" || key === "extracurricular_per_week" ? 0 : 1;
+      return [key, clamp(Math.round(average), min, 5)];
+    })
+  );
+}
+
+function getStressVolume(formValues, volumeValues) {
+  const answeredQuestions = questions.filter((question) => isAnswered(formValues[question.key]));
+  if (answeredQuestions.length === 0) return 0;
+
+  const total = answeredQuestions.reduce((sum, question) => {
+    const value = Number(volumeValues[question.key] || 0);
+    return sum + (question.direction === "protective" ? 100 - value : value);
+  }, 0);
+
+  return Math.round(total / answeredQuestions.length);
+}
+
 function scoreQuestion(question, value) {
-  if (question.key === "sleep_quality" || question.key === "academic_performance") {
+  const key = question.featureKey || question.key;
+
+  if (key === "sleep_quality" || key === "academic_performance") {
     return ((value - 1) / 4) * 100;
   }
 
-  if (question.key === "headaches_per_week" || question.key === "study_load") {
+  if (key === "headaches_per_week" || key === "study_load") {
     return ((5 - value) / 5) * 100;
   }
 
@@ -136,8 +366,10 @@ function formatPercent(value) {
   return `${Math.round((value || 0) * 100)}%`;
 }
 
-function getSelectedOption(question, value) {
-  return question.options.find((option) => option.value === value) || null;
+function getInterpretedLabel(question, value) {
+  const featureValue = inferFeatureValue(question.featureKey, value);
+  const labels = featureLabels[question.featureKey] || [];
+  return labels[featureValue - (question.featureKey === "headaches_per_week" || question.featureKey === "extracurricular_per_week" ? 0 : 1)] || "Interpreted";
 }
 
 export default function App() {
@@ -145,40 +377,53 @@ export default function App() {
   const [view, setView] = useState("checkin");
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(initialForm);
+  const [volumes, setVolumes] = useState(initialVolumes);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState(readHistory);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  const answeredCount = questions.filter((question) => form[question.key] !== null).length;
+  const interpretedInput = useMemo(() => buildModelInput(form, volumes), [form, volumes]);
+  const stressVolume = useMemo(() => getStressVolume(form, volumes), [form, volumes]);
+  const answeredCount = questions.filter((question) => isAnswered(form[question.key])).length;
   const isComplete = answeredCount === questions.length;
   const progress = Math.round((answeredCount / questions.length) * 100);
   const currentQuestion = questions[step];
   const currentAnswer = form[currentQuestion.key];
-  const isCurrentAnswered = currentAnswer !== null;
+  const currentVolume = volumes[currentQuestion.key];
+  const isCurrentAnswered = isAnswered(currentAnswer);
 
   const readinessScore = useMemo(() => {
-    const answeredQuestions = questions.filter((question) => form[question.key] !== null);
+    const answeredQuestions = questions.filter((question) => isAnswered(form[question.key]));
     if (answeredQuestions.length === 0) return 0;
 
-    const total = answeredQuestions.reduce((sum, question) => sum + scoreQuestion(question, form[question.key]), 0);
+    const total = answeredQuestions.reduce((sum, question) => sum + scoreQuestion(question, interpretedInput[question.featureKey]), 0);
     return Math.round(total / answeredQuestions.length);
-  }, [form]);
+  }, [form, interpretedInput]);
 
   const pressurePoints = useMemo(() => {
     return questions
-      .filter((question) => form[question.key] !== null)
+      .filter((question) => isAnswered(form[question.key]))
       .map((question) => ({
         ...question,
-        score: scoreQuestion(question, form[question.key]),
-        selected: getSelectedOption(question, form[question.key]),
+        score: scoreQuestion(question, interpretedInput[question.featureKey]),
+        interpreted: getInterpretedLabel(question, form[question.key]),
       }))
       .sort((a, b) => a.score - b.score)
       .slice(0, 2);
-  }, [form]);
+  }, [form, interpretedInput]);
 
   function updateField(key, value) {
     setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+    setResult(null);
+    setApiError("");
+  }
+
+  function updateVolume(key, value) {
+    setVolumes((current) => ({
       ...current,
       [key]: Number(value),
     }));
@@ -191,6 +436,7 @@ export default function App() {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
       form,
+      volumes,
       result: data,
     };
     const nextHistory = [item, ...history].slice(0, 8);
@@ -212,7 +458,7 @@ export default function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(interpretedInput),
       });
 
       if (!response.ok) {
@@ -232,6 +478,7 @@ export default function App() {
 
   function resetForm() {
     setForm(initialForm);
+    setVolumes(initialVolumes);
     setResult(null);
     setApiError("");
     setStep(0);
@@ -244,7 +491,14 @@ export default function App() {
   }
 
   function applyHistoryItem(item) {
-    setForm(item.form);
+    setForm({
+      ...initialForm,
+      ...item.form,
+    });
+    setVolumes({
+      ...initialVolumes,
+      ...(item.volumes || {}),
+    });
     setResult(item.result);
     setApiError("");
     setView("review");
@@ -293,6 +547,10 @@ export default function App() {
             <div>
               <span>Readiness</span>
               <strong>{readinessScore}%</strong>
+            </div>
+            <div>
+              <span>Stress Volume</span>
+              <strong>{stressVolume}%</strong>
             </div>
           </div>
         </header>
@@ -344,7 +602,7 @@ export default function App() {
             <div key={point.key}>
               <point.icon size={18} />
               <span>{point.label}</span>
-              <strong>{point.selected?.title}</strong>
+              <strong>{point.interpreted}</strong>
             </div>
           ))}
         </section>
@@ -377,18 +635,36 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="answer-grid">
-                {currentQuestion.options.map((option) => (
-                  <button
-                    type="button"
-                    className={currentAnswer === option.value ? "answer-option selected" : "answer-option"}
-                    key={`${currentQuestion.key}-${option.value}`}
-                    onClick={() => updateField(currentQuestion.key, option.value)}
-                  >
-                    <strong>{option.title}</strong>
-                    <span>{option.detail}</span>
-                  </button>
-                ))}
+              <div className="open-answer">
+                <textarea
+                  value={currentAnswer}
+                  onChange={(event) => updateField(currentQuestion.key, event.target.value)}
+                  placeholder={currentQuestion.placeholder}
+                  rows={7}
+                  aria-label={currentQuestion.question}
+                />
+                <div className="answer-analysis">
+                  <span>Interpreted signal</span>
+                  <strong>{isCurrentAnswered ? getInterpretedLabel(currentQuestion, currentAnswer) : "Waiting for your answer"}</strong>
+                </div>
+                <label className="volume-control">
+                  <div>
+                    <span>{currentQuestion.volumeLabel}</span>
+                    <strong>{currentVolume}%</strong>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={currentVolume}
+                    onChange={(event) => updateVolume(currentQuestion.key, event.target.value)}
+                    aria-label={currentQuestion.volumeLabel}
+                  />
+                  <div className="volume-labels">
+                    <span>{currentQuestion.volumeLow}</span>
+                    <span>{currentQuestion.volumeHigh}</span>
+                  </div>
+                </label>
               </div>
             </article>
 
@@ -438,16 +714,14 @@ export default function App() {
               </div>
 
               <div className="insight-list">
-                {questions.map((question) => {
-                  const selected = getSelectedOption(question, form[question.key]);
-                  return (
-                    <article className="insight-card" key={question.key}>
-                      <strong>{question.label}</strong>
-                      <span>{selected ? selected.title : "Not answered"}</span>
-                      <p>{selected ? selected.detail : "Go back and choose an answer."}</p>
-                    </article>
-                  );
-                })}
+                {questions.map((question) => (
+                  <article className="insight-card" key={question.key}>
+                    <strong>{question.label}</strong>
+                    <span>{isAnswered(form[question.key]) ? getInterpretedLabel(question, form[question.key]) : "Not answered"}</span>
+                    <p>{isAnswered(form[question.key]) ? form[question.key] : "Go back and write an answer."}</p>
+                    <small>{question.volumeLabel}: {volumes[question.key]}%</small>
+                  </article>
+                ))}
               </div>
 
               <div className="actions">
@@ -494,6 +768,10 @@ export default function App() {
                     <div>
                       <span>Confidence</span>
                       <strong>{formatPercent(result.confidence)}</strong>
+                    </div>
+                    <div>
+                      <span>Stress Volume</span>
+                      <strong>{stressVolume}%</strong>
                     </div>
                   </div>
 
@@ -586,15 +864,19 @@ export default function App() {
               </article>
               <article className="info-card">
                 <strong>Question Progress</strong>
-                <p>The progress percentage shows how many of the five questions have been answered.</p>
+                <p>The progress percentage shows how many of the ten open-ended questions have been answered.</p>
+              </article>
+              <article className="info-card">
+                <strong>Stress Volume</strong>
+                <p>Each question has a 0 to 100 volume control, so answers can show small, medium, or intense pressure instead of only broad levels.</p>
               </article>
               <article className="info-card">
                 <strong>Readiness Score</strong>
-                <p>A quick wellness-style score based on the current answers. Higher means the answers look more balanced.</p>
+                <p>A quick wellness-style score based on interpreted answer signals and volume controls. Higher means the answers look more balanced.</p>
               </article>
               <article className="info-card">
                 <strong>Live Profile</strong>
-                <p>The profile chip changes from Not started to Stable, Mixed, or Strained as answers are selected.</p>
+                <p>The profile chip changes from Not started to Stable, Mixed, or Strained as answers are written.</p>
               </article>
               <article className="info-card">
                 <strong>Pressure Points</strong>
@@ -606,7 +888,7 @@ export default function App() {
               </article>
               <article className="info-card">
                 <strong>Predict Stress Button</strong>
-                <p>Sends the completed answers to the backend model and returns the stress prediction.</p>
+                <p>Combines the written answers and volume controls into model-ready signals, then returns the stress prediction.</p>
               </article>
               <article className="info-card">
                 <strong>Stress Profile</strong>
