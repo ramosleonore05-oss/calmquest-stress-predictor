@@ -168,12 +168,41 @@ const featureLabels = {
   extracurricular_per_week: ["None", "Light", "Balanced", "Active", "Busy", "Packed"],
 };
 
+const stressLevelLabels = {
+  1: "Very Low Stress",
+  2: "Low Stress",
+  3: "Moderate Stress",
+  4: "High Stress",
+  5: "Very High Stress",
+};
+
 const stressLevelDescriptions = {
   1: "Very low stress: your current school pressure looks light and manageable.",
   2: "Low stress: there may be some pressure, but your profile still looks mostly balanced.",
   3: "Moderate stress: several signals suggest pressure is building and needs attention.",
   4: "High stress: school demands may be affecting your energy, focus, or recovery.",
   5: "Very high stress: your profile suggests strong pressure and support should be prioritized.",
+};
+
+const stressRecommendations = {
+  1: "Keep the routine steady. Your current balance looks healthy, so maintain sleep, breaks, and manageable study habits.",
+  2: "Your stress looks low, but keep watching small pressure points before they build up.",
+  3: "Your stress looks moderate. Choose one pressure point to reduce today and protect time for recovery.",
+  4: "Your stress looks high. Reduce workload where possible, rest properly, and ask for support early.",
+  5: "Your stress looks very high. Talk to a trusted person, counselor, adviser, or health professional as soon as possible.",
+};
+
+const volumeActionSuggestions = {
+  sleep_quality: "Prioritize sleep recovery tonight and avoid pushing study time too close to bedtime.",
+  headaches_per_week: "Track headaches or body tension and take breaks, hydrate, or seek support if symptoms continue.",
+  academic_performance: "Pick one difficult class task and ask for clarification before it piles up.",
+  study_load: "Break schoolwork into smaller blocks and set a clear stop time for studying.",
+  extracurricular_per_week: "Adjust activities so they do not crowd out sleep, meals, or school recovery.",
+  emotional_pressure: "Name the strongest feeling you noticed and talk it through with someone you trust.",
+  focus_energy: "Use one short focused study block, then pause before your attention drops too far.",
+  deadline_pressure: "List the nearest deadlines and handle the smallest urgent task first.",
+  support_system: "Reach out to one person who can help with school pressure or emotional support.",
+  recovery_breaks: "Schedule one real recovery break that is not mixed with homework or responsibility.",
 };
 
 function readHistory() {
@@ -265,6 +294,88 @@ function getVolumeLabel(question, volume) {
 
 function getStressLevelDescription(level) {
   return stressLevelDescriptions[level] || "This level summarizes the stress pattern detected from your volume profile.";
+}
+
+function stressVolumeToLevel(value) {
+  if (value <= 20) return 1;
+  if (value <= 40) return 2;
+  if (value <= 60) return 3;
+  if (value <= 80) return 4;
+  return 5;
+}
+
+function buildVolumeProbabilityBands(value) {
+  const centers = {
+    1: 10,
+    2: 30,
+    3: 50,
+    4: 70,
+    5: 90,
+  };
+  const weights = Object.entries(centers).map(([level, center]) => {
+    const distance = Math.abs(value - center);
+    return [Number(level), 1 / (1 + distance / 18) ** 2];
+  });
+  const total = weights.reduce((sum, [, weight]) => sum + weight, 0);
+
+  return weights.map(([level, weight]) => ({
+    level,
+    label: stressLevelLabels[level],
+    probability: roundToThree(weight / total),
+  }));
+}
+
+function roundToThree(value) {
+  return Math.round(value * 1000) / 1000;
+}
+
+function getQuestionStressScore(question, volumeValues) {
+  const value = Number(volumeValues[question.key] || 0);
+  return question.direction === "protective" ? 100 - value : value;
+}
+
+function buildVolumeActionPlan(level, volumeValues) {
+  const actions = questions
+    .map((question) => ({
+      key: question.key,
+      score: getQuestionStressScore(question, volumeValues),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .filter((item) => item.score >= 55)
+    .slice(0, 2)
+    .map((item) => volumeActionSuggestions[item.key]);
+
+  if (level >= 4) {
+    actions.push("Talk with a teacher, adviser, counselor, or trusted adult if stress is affecting daily life.");
+  } else if (level === 3) {
+    actions.push("Choose one high-pressure area and make a simple plan for it today.");
+  } else {
+    actions.push("Keep your current routine stable and check in again after a demanding school day.");
+  }
+
+  return [...new Set(actions)].slice(0, 3);
+}
+
+function buildVolumePrediction(volumeValue, volumeValues, apiData = {}) {
+  const level = stressVolumeToLevel(volumeValue);
+  const probabilityBands = buildVolumeProbabilityBands(volumeValue);
+  const confidence = Math.max(...probabilityBands.map((band) => band.probability));
+
+  return {
+    ...apiData,
+    predicted_stress_level: level,
+    stress_label: stressLevelLabels[level],
+    confidence,
+    probability_bands: probabilityBands,
+    recommendation: stressRecommendations[level],
+    action_plan: buildVolumeActionPlan(level, volumeValues),
+    input_received: apiData.input_received || buildModelInput(volumeValues),
+    model_metrics: apiData.model_metrics || {
+      accuracy: 0,
+      dataset_rows: 0,
+    },
+    source: "volume_profile",
+  };
 }
 
 export default function App() {
@@ -367,11 +478,16 @@ export default function App() {
       }
 
       const data = await response.json();
-      setResult(data);
-      saveHistoryItem(data);
+      const volumePrediction = buildVolumePrediction(stressVolume, volumes, data);
+      setResult(volumePrediction);
+      saveHistoryItem(volumePrediction);
       setView("review");
     } catch (error) {
-      setApiError(error.message);
+      const volumePrediction = buildVolumePrediction(stressVolume, volumes);
+      setResult(volumePrediction);
+      saveHistoryItem(volumePrediction);
+      setView("review");
+      setApiError(`${error.message} Showing the volume-based prediction instead.`);
     } finally {
       setLoading(false);
     }
@@ -791,7 +907,7 @@ export default function App() {
               </article>
               <article className="info-card">
                 <strong>Predict Stress Button</strong>
-                <p>Converts the volume controls into model-ready signals, then returns the stress prediction.</p>
+                <p>Uses the completed volume profile as the primary stress prediction and keeps the backend model as supporting context.</p>
               </article>
               <article className="info-card">
                 <strong>Stress Profile</strong>
